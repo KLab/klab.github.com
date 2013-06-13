@@ -1,0 +1,279 @@
+<!doctype html>
+<!-- https://github.com/paulirish/html5-boilerplate/blob/master/index.html -->
+<!-- paulirish.com/2008/conditional-stylesheets-vs-css-hacks-answer-neither/ -->
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html lang="en" class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf8">
+
+  <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+       Remove this if you use the .htaccess -->
+  <meta http-equiv="X-UA-Compatible" content="">
+
+  <!-- encoding must be specified within the first 512 bytes
+        www.whatwg.org/specs/web-apps/current-work/multipage/semantics.html#charset -->
+
+  <!-- meta element for compatibility mode needs to be before
+        all elements except title & meta
+        msdn.microsoft.com/en-us/library/cc288325(VS.85).aspx -->
+  <!-- Chrome Frame is only invoked if meta element for
+        compatibility mode is within the first 1K bytes
+        code.google.com/p/chromium/issues/detail?id=23003 -->
+
+  <title>mod_cidr_lookup</title>
+  <meta name="description" content="">
+  <meta name="author" content="Lakshmi Vyasarajan">
+
+  <!--  Mobile viewport optimized: j.mp/bplateviewport -->
+  <meta name="viewport" content="">
+
+    <!-- Place favicon.ico & apple-touch-icon.png
+        in the root of your domain and delete these references -->
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  
+    <link rel="stylesheet" href="/media/css/site.css">
+  <link rel="stylesheet" href="/media/css/syntax.css">
+  
+    <!-- All JavaScript at the bottom, except for Modernizr which
+        enables HTML5 elements & feature detects -->
+    <script src="/media/js/libs/modernizr-1.7.min.js"></script>
+    </head>
+<body id="mod_cidr_lookup">
+    <div id="container">
+            <div id="main" role="main">
+          <header class="banner clearfix">
+          <a href="/"><img src="/media/images/logo.gif"></a>                              <nav class=main_nav>
+    <ul>
+                <li>
+            <a title="Home Page"
+                class="button white home"
+                href="/index.html">
+                Home
+            </a>
+        </li>    </ul>
+</nav>
+                    </header>
+          <section class="content">
+          <h2 id="overview">Overview</h2>
+<p>mod_cidr_lookupは、アクセスしてきたクライアントの<span class="caps">IP</span>アドレスが、起動時に読み込んでおいた<span class="caps">CIDR</span>ブロック群のいずれかにマッチするかどうかを判別するためのモジュールです。Apache&nbsp;2.0と2.2系に対応しています。</p>
+<p>マッチした結果は、環境変数 (X_CLIENT_TYPE) と<span class="caps">HTTP</span>リクエストヘッダ (X-Client-Type)&nbsp;にセットするので、Apache自身とバックエンドのWebアプリの両方で同じ情報を参照することができます。</p>
+<h3 id="_1">使用例</h3>
+<p>※<span class="caps">IP</span>アドレス帯域の正確性などについては、情報提供元にお問い合わせください。</p>
+<h4 id="reverse-proxy">クローラからのアクセスは別のサーバにreverse&nbsp;proxyする</h4>
+<p>モバイル用のクローラには、送信元<span class="caps">IP</span>アドレスを公開しているものがあります。</p>
+<ul>
+<li><a href="http://googlejapan.blogspot.com/2008/05/google.html">Google&nbsp;モバイルウェブクローラー</a></li>
+<li><a href="http://help.yahoo.co.jp/help/jp/search/indexing/indexing-27.html">モバイル版Yahoo!</a></li>
+<li><a href="http://helpguide.livedoor.com/help/search/qa/grp627">livedoor</a></li>
+<li><a href="http://crawler.dena.jp/">DeNA&nbsp;moba-crawler</a></li>
+<li><a href="http://ke-tai.org/index.php?%A5%B1%A1%BC%A5%BF%A5%A4%A5%AD%A5%E3%A5%EA%A5%A2%A1%A6%A5%AF%A5%ED%A1%BC%A5%E9IP%A5%A2%A5%C9%A5%EC%A5%B9">ケータイキャリア・クローラ<span class="caps">IP</span>アドレス -&nbsp;ke-tai.org</a></li>
+</ul>
+<p>これらの情報を使って、クローラからのアクセスを判別し、クローラはクローラ専用のサーバクラスタへreverse&nbsp;proxyで振り分けることができます。</p>
+<p>mod_rewriteを使った設定例はこうなります。</p>
+<div class="codehilite"><pre>    <span class="n">RewriteCond</span> <span class="o">%</span><span class="p">{</span><span class="n"><span class="caps">ENV</span></span><span class="o">:</span><span class="n">X_CLIENT_TYPE</span><span class="p">}</span> <span class="o">^</span><span class="n">crawler</span><span class="o">-</span><span class="p">.</span><span class="o">*</span>  <span class="err">#</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="err">環境変数</span><span class="n">X_CLIENT_TYPE</span><span class="err">が</span><span class="n">crawler</span><span class="o">-</span><span class="err">で始まるときだけ。</span>
+    <span class="n">RewriteRule</span> <span class="o">^/</span><span class="p">(.</span><span class="o">*</span><span class="p">)</span><span class="o">/</span><span class="err">$</span> <span class="n">http</span><span class="o">:</span><span class="c1">//4crawler/$1 [P,L] # (1) http://4crawlerにreverse proxyする</span>
+</pre></div>
+
+
+<h4 id="_2">特定のクライアントからのアクセスを許可する</h4>
+<p>Allowディレクティブでは環境変数を参照することができるので、例えば自社の<span class="caps">IP</span>アドレス帯からのアクセスを許可したり、</p>
+<div class="codehilite"><pre>    <span class="n">Allow</span> <span class="n">from</span> <span class="n">env</span><span class="o">=</span><span class="n">my_company</span>
+</pre></div>
+
+
+<p>モバイルキャリアからのアクセスを許可したり、</p>
+<div class="codehilite"><pre>    <span class="n">SetEnvIf</span> <span class="n">X_CLIENT_TYPE</span> <span class="s">&quot;^(docomo|au|softbank)&quot;</span> <span class="n">is_mobile</span> <span class="err">#</span> <span class="mi">3</span><span class="err">キャリアのいずれかの場合は新たに環境変数</span><span class="n">is_mobile</span><span class="err">をセットする</span>
+    <span class="n">Allow</span> <span class="n">from</span> <span class="n">env</span><span class="o">=</span><span class="n">is_mobile</span>
+</pre></div>
+
+
+<p>ということができます。</p>
+<p>またWebアプリから、環境変数を参照したり、</p>
+<div class="codehilite"><pre><span class="cp">&lt;?php</span>
+    <span class="nv">$type</span> <span class="o">=</span> <span class="nb">getenv</span><span class="p">(</span><span class="s2">&quot;X_CLIENT_TYPE&quot;</span><span class="p">);</span> <span class="c1"># docomo, au, softbank, ...</span>
+</pre></div>
+
+
+<p>リクエストヘッダを参照することによって、</p>
+<div class="codehilite"><pre><span class="cp">&lt;?php</span>
+    <span class="nv">$r</span><span class="o">-&gt;</span><span class="na">header_in</span><span class="p">(</span><span class="s2">&quot;X-Client-Type&quot;</span><span class="p">);</span> <span class="c1"># docomo, au, softbank, ...</span>
+
+    <span class="nv">$headers</span> <span class="o">=</span> <span class="nb">apache_request_headers</span><span class="p">();</span>
+    <span class="nv">$headers</span><span class="p">[</span><span class="s2">&quot;X-Client-Type&quot;</span><span class="p">];</span> <span class="c1"># docomo, au, softbank, ...</span>
+</pre></div>
+
+
+<p>判別した結果を参照することができます。</p>
+<h2 id="release-note">Release&nbsp;Note</h2>
+<h3 id="2008-09-16-mod_cidr_lookup-12">2008-09-16&nbsp;mod_cidr_lookup-1.2</h3>
+<ul>
+<li>サーバ設定とバーチャルホストのコンテキストで、mod_cidr_lookupでセットした環境変数が、SetEnvIfで参照できない問題を修正しました。</li>
+</ul>
+<h3 id="2008-09-12-mod_cidr_lookup-11">2008-09-12&nbsp;mod_cidr_lookup-1.1</h3>
+<ul>
+<li>mod_cidr_lookupでセットした環境変数が、SetEnvIfで参照できない問題を修正しました。ブログでコメントいただいたesさん、ありがとうございました！</li>
+</ul>
+<h3 id="2008-08-25-mod_cidr_lookup-10">2008-08-25&nbsp;mod_cidr_lookup-1.0</h3>
+<ul>
+<li>最初のリリース</li>
+</ul>
+<h2 id="download">Download</h2>
+<ul>
+<li><a href="http://sourceforge.net/project/showfiles.php?group_id=235482">ダウンロードページ</a></li>
+<li>1.2<ul>
+<li><a href="http://downloads.sourceforge.net/modcidrlookup/mod_cidr_lookup-1.2.tar.gz">http://downloads.sourceforge.net/modcidrlookup/mod_cidr_lookup-1.2.tar.gz</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<div class="codehilite"><pre>    VER=1.0
+    tar zxf mod_cidr_lookup-<span class="cp">${</span><span class="n"><span class="caps">VER</span></span><span class="cp">}</span>.tar.gz
+    cd  mod_cidr_lookup-<span class="cp">${</span><span class="n"><span class="caps">VER</span></span><span class="cp">}</span>/apache2
+    make
+    sudo make install
+</pre></div>
+
+
+<h2 id="configuration">Configuration</h2>
+<p>まず、モジュールをロードします。</p>
+<div class="codehilite"><pre>    <span class="n">LoadModule</span>  <span class="n">cidr_lookup_module</span>  <span class="n">modules</span><span class="o">/</span><span class="n">mod_cidr_lookup</span><span class="p">.</span><span class="n">so</span>
+</pre></div>
+
+
+<p>mod_cidr_lookupが提供するディレクティブはCIDRFileだけです。</p>
+<h3 id="cidrfile">CIDRFile</h3>
+<table>
+<thead>
+<tr>
+<th>説明</th>
+<th><span class="caps">CIDR</span>マッチに使用するための、<span class="caps">CIDR</span>の一覧が書かれているテキストファイルの名前を指定する</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>構文</td>
+<td>CIDRFile <i>file-path</i></td>
+</tr>
+<tr>
+<td>コンテキスト</td>
+<td>サーバ設定ファイル, バーチャルホスト, ディレクトリ (.htaccessでは指定できません)</td>
+</tr>
+<tr>
+<td>モジュール</td>
+<td>mod_cidr_lookup</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><span class="caps">CIDR</span>マッチに使用するための、<span class="caps">CIDR</span>の一覧が書かれているテキストファイルを指定します。</p>
+<div class="list">
+    CIDRFile &#8220;/usr/local/etc/ip.d/crowler-google&#8221;
+    CIDRFile &#8220;/usr/local/etc/ip.d/crowler-yahoo&#8221;
+    CIDRFile &#8220;/usr/local/etc/ip.d/crowler-livedoor&#8221;
+
+</div>
+
+<p>シェル形式(fnmatch)のワイルドカードを使って、複数のファイルを一度に指定することもできます。</p>
+<div class="list">
+    CIDRFile &#8220;/usr/local/etc/ip.d/*&#8221;
+
+    CIDRFile &#8220;/usr/local/etc/ip.d/[a-z]*[a-z]&#8221;
+
+</div>
+
+<p>CIDRFileで指定されたファイルの名前が、ヘッダや環境変数に埋め込まれる文字列になります。</p>
+<p>例えば、</p>
+<div class="list">
+    &lt;VirtualHost *:80&gt;
+      ServerName   &#8230;
+      DocumentRoot /&#8230;
+      &#8230;
+      CIDRFile &#8220;/usr/local/etc/ip.d/foo&#8221;
+      CIDRFile &#8220;/usr/local/etc/ip.d/bar&#8221;
+      CIDRFile &#8220;/usr/local/etc/ip.d/baz&#8221;
+    &lt;/VirtualHost&gt;
+
+</div>
+
+<p>という設定とそこで指定している<span class="caps">CIDR</span>のファイルが以下のときに、</p>
+<div class="list">
+    $ cat /usr/local/etc/ip.d/foo
+    172.16.0.0/16
+
+    $ cat /usr/local/etc/ip.d/bar
+    10.0.1.0/24
+    10.1.1.0/24
+    10.2.1.0/24
+
+    $ cat /usr/local/etc/ip.d/baz
+    10.10.0.0/16
+    10.14.0.0/16
+
+</div>
+
+<p>アクセスしてきたクライアントの<span class="caps">IP</span>アドレスが10.1.1.64の場合は、ファイルbarに書かれている2つめの<span class="caps">CIDR</span>(10.1.1.0/24)にマッチするので、環境変数X_CLIENT_TYPEとリクエストヘッダX-Client-Typeに&#8221;bar&#8221;がセットされます。</p>
+<h2 id="note">Note</h2>
+<ul>
+<li><span class="caps">CIDR</span>ファイルの変更を反映するには、httpdを起動し直すか、シグナル(<span class="caps">HUP</span>,&nbsp;<span class="caps">USR1</span>)を送って再起動してください。</li>
+</ul>
+<h2 id="authors">Authors</h2>
+<ul>
+<li><span class="caps">HIROSE</span>&nbsp;Masaaki</li>
+<li><span class="caps">YASUI</span>&nbsp;Masanobu</li>
+<li><span class="caps">HAMANO</span>&nbsp;Tsukasa</li>
+<li><span class="caps">INADA</span>&nbsp;Naoki</li>
+</ul>
+<h2 id="license">License</h2>
+<ul>
+<li>Apache License Version&nbsp;2.0</li>
+</ul>
+<h2 id="related-resouces">Related&nbsp;Resouces</h2>
+<ul>
+<li>
+<p><a href="http://dsas.blog.klab.org/"><span class="caps">DSAS</span>開発者の部屋</a></p>
+<ul>
+<li><a href="http://dsas.blog.klab.org/archives/51293329.html">#1 ひろせの場合 -&nbsp;<span class="caps">IP</span>::Countryと<span class="caps">APR</span>を使ってみた</a></li>
+<li><a href="http://dsas.blog.klab.org/archives/51293334.html">#2 安井の場合:&nbsp;バイナリサーチのあれとこれ</a></li>
+<li><a href="http://dsas.blog.klab.org/archives/51293338.html">#3 hamanoの場合: あ ありのまま 今&nbsp;起こった事を話すぜ!『コードコンペだと思ったらゴルフコンペだった』な(ry</a></li>
+<li><a href="http://dsas.blog.klab.org/archives/51294589.html">#4 稲田の場合:&nbsp;hamanoが倒せない</a></li>
+</ul>
+</li>
+<li>
+<p><a href="http://www.s5h.net/code/mod-cidr/">mod_cidr</a></p>
+</li>
+<li><a href="http://labs.yumemi.co.jp/labs/mod/man_3.html">mod_ktai_ipadmin</a></li>
+<li><a href="http://d.hatena.ne.jp/tasukuchan/20071231/1199105717"><span class="caps">PHP</span>で高速に携帯ゲートウェイの<span class="caps">IP</span>から携帯キャリアを判別する -&nbsp;グニャラくんのグニャグニャ備忘録@はてな</a></li>
+<li><a href="http://d.hatena.ne.jp/qinglong/20060901/p1">Apache mod_rewrite 携帯アクセスを動的に振り分ける 〜<span class="caps">CIDR</span>じゃなきゃヤダ!〜 - <span class="caps">QINGLONG</span>’S&nbsp;-モノ作り的思考-</a></li>
+<li><a href="http://search.cpan.org/dist/IP-Country/"><span class="caps">IP</span>::Country</a></li>
+</ul>
+          </section>
+      </div>
+      </div> <!--! end of #container -->
+  <footer>
+      <img src="/media/images/banner.gif">
+  </footer>
+      <!-- Javascript at the bottom for fast page loading -->
+    <!-- Grab Google CDN's jQuery, with a protocol relative URL; fall back to local if necessary -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.js"></script>
+  <script>window.jQuery || document.write('<script src="js/libs/jquery-1.5.1.min.js">\x3C/script>')</script>
+  
+    
+
+  <!--[if lt IE 7 ]>
+    <script src="js/libs/dd_belatedpng.js"></script>
+    <script>DD_belatedPNG.fix('img, .png_bg'); // Fix any <img> or .png_bg bg-images. Also, please read goo.gl/mZiyb </script>
+  <![endif]-->
+
+  
+  </body>
+</html>
